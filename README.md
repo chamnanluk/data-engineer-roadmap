@@ -40,6 +40,62 @@ Analytics SQL + Sample Output
 - **SQL**: DDL/DML scripts, star schema modeling, analytics queries.
 - **Pytest**: lightweight unit tests for non-database logic.
 
+## Local Setup (practical)
+1) Prereqs: Python 3.11+, Git, PostgreSQL (with `psql` client), pip.
+2) Clone and enter the project
+```powershell
+git clone https://github.com/chamnanluk/data-engineer-roadmap.git
+cd data-engineer-roadmap
+```
+3) Create and activate a virtualenv
+```powershell
+python -m venv .venv
+.\\.venv\\Scripts\\activate
+```
+4) Install dependencies (pinned in `requirements.txt`)
+```powershell
+python -m pip install --upgrade pip
+python -m pip install -r requirements.txt
+```
+5) Configure environment variables (used by `src/database/connect.py`)
+```powershell
+copy .env.example .env
+# edit .env with your values:
+# PGHOST=localhost
+# PGPORT=5432
+# PGDATABASE=analytics
+# PGUSER=postgres
+# PGPASSWORD=postgres
+```
+6) Prepare PostgreSQL
+```powershell
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -c "CREATE DATABASE %PGDATABASE%;"
+```
+7) Create schema/tables then load data
+```powershell
+# DDL (order matters)
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/ddl/create_schema.sql
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/ddl/create_staging_tables.sql
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/ddl/create_dimension_tables.sql
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/ddl/create_fact_table.sql
+# DML (populate dims/fact)
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/dml/insert_dim_customers.sql
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/dml/insert_dim_products.sql
+psql -h %PGHOST% -U %PGUSER% -p %PGPORT% -d %PGDATABASE% -f sql/dml/insert_fact_sales.sql
+```
+8) Run the pipeline end-to-end (writes cleaned CSVs + sample report)
+```powershell
+python -m src.pipeline.main_pipeline
+```
+9) Check outputs
+- Cleaned CSVs: `data/cleaned/`
+- Final sample report: `data/sample_output/final_sales_report.csv`
+
+## Quick test
+```powershell
+pytest
+```
+
 ## Folder Structure
 ```text
 .
